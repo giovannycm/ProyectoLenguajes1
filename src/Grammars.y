@@ -76,7 +76,7 @@ SASA : var    { IdS $1 }
 
     -- Lógica y Condicionales
     | '(' "not" SASA ')'    { NotS $3 }
-    | '(' if0 SASA SASA SASA ')'    { If0S $3 $4 $5 }
+    | '(' if0 SASA SASA SASA ')'    { IfS (EqS [$3, NumS 0]) $4 $5 }
     | '(' if  SASA SASA SASA ')'    { IfS  $3 $4 $5 }
     | '(' cond CondClauses ElseClause ')' { CondS $3 $4 }
 
@@ -102,39 +102,38 @@ SASA : var    { IdS $1 }
 
 -- Reglas auxiliares para listas
 
+
+
 -- Lista de 2 o más expresiones (para operadores variádicos)
-ExprList2 : SASA SASA    { [$1, $2] }
-    | ExprList2 SASA    { $1 ++ [$2] }
+ExprList2 : SASA SASA            { [$1, $2] }
+          | ExprList2 SASA       { $1 ++ [$2] }
 
--- Lista de 0 o más expresiones (para aplicación)
-ExprList :    { [] }
-    | SASA    { [$1] }
-    | ExprList SASA    { $1 ++ [$2] }
+-- Lista de 0 o más expresiones (para aplicación AppS)
+ExprList : {- empty -}           { [] }
+         | ExprList SASA         { $1 ++ [$2] }
 
--- Lista de 0 o más expresiones separadas por coma (para sintaxis [1, 2, 3])
-ExprListComma :     { [] }
-    | SASA    { [$1] }
-    | ExprListComma ',' SASA    { $1 ++ [$3] }
+-- Lista de 0 o más expresiones separadas por coma
+ExprListComma : {- empty -}      { [] }
+              | SASA             { [$1] }
+              | ExprListComma ',' SASA { $1 ++ [$3] }
 
--- Lista para let, let*
-BindingList : Binding    { [$1] }
-    | BindingList Binding    { $1 ++ [$2] }
+-- Lista de Bindings para let/let*
+BindingList : Binding            { [$1] }
+            | BindingList Binding { $1 ++ [$2] }
 
-Binding : '(' var SASA ')'    { ($2, $3) }
+Binding : '(' var SASA ')'       { ($2, $3) }
 
 -- Lista de 0 o más variables (para lambda)
-VarList :    { [] }
-    | var    { [$1] }
-    | VarList var    { $1 ++ [$2] }
+VarList : {- empty -}            { [] }
+        | VarList var            { $1 ++ [$2] }
 
--- Cláusulas para cond (1 o más)
-CondClauses : CondClause    { [$1] }
-    | CondClauses CondClause    { $1 ++ [$2] }
+-- Cláusulas para cond
+CondClauses : CondClause         { [$1] }
+            | CondClauses CondClause { $1 ++ [$2] }
 
-CondClause : '[' SASA SASA ']'    { ($2, $3) }
+CondClause : '[' SASA SASA ']'   { ($2, $3) }
 
--- Cláusula else para cond
-ElseClause : '[' else SASA ']'    { $3 }
+ElseClause : '[' else SASA ']'   { $3 }
 
 
 {

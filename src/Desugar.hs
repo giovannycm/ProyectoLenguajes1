@@ -30,8 +30,6 @@ data ASA
   | Pair ASA ASA
   | Fst ASA
   | Snd ASA
-  | Head ASA
-  | Tail ASA
   -- Condicionales (Núcleo)
   | If ASA ASA ASA
   -- Funciones (Núcleo)
@@ -66,8 +64,6 @@ data ASAValues
   | PairV ASAValues ASAValues
   | FstV ASAValues
   | SndV ASAValues
-  | HeadV ASAValues
-  | TailV ASAValues
   -- Condicionales
   | IfV ASAValues ASAValues ASAValues
   -- Funciones y Aplicación
@@ -134,8 +130,8 @@ desugar (ListS es)      = desugarList es
     desugarList [] = Nil
     desugarList (x:xs) = Pair (desugar x) (desugarList xs)
 
-desugar (HeadS e)       = Head (desugar e)
-desugar (TailS e)       = Tail (desugar e)
+desugar (HeadS e)       = Fst (desugar e)  
+desugar (TailS e)       = Snd (desugar e) 
 
 -- let variádico: (let ((x v1) (y v2)) c) -> ((lambda (x y) c) v1 v2)
 desugar (LetS bindings c) = desugar (AppS (FunS (map fst bindings) c) (map snd bindings))
@@ -144,7 +140,10 @@ desugar (LetS bindings c) = desugar (AppS (FunS (map fst bindings) c) (map snd b
 desugar (LetStarS [] c)      = desugar c
 desugar (LetStarS (b:bs) c)  = desugar (LetS [b] (LetStarS bs c))
 
--- letrec: (letrec (p v) c) -> (let ((p (Z (lambda (p) v)))) c)
+-- letrec: (letrec (p v) c) -> (let ((p (Z (lambda (p) v)))) c)  
+-- p identificador de la función
+-- v valor de la función
+-- c cuerpo de la función
 desugar (LetRecS p v c) = desugar (LetS [(p, AppS (IdS "Z") [FunS [p] v])] c)
 
 -- Funciones y Aplicación
@@ -181,8 +180,8 @@ desugarV (Sqrt e)       = SqrtV (desugarV e)
 desugarV (Pair i d)     = PairV (desugarV i) (desugarV d)
 desugarV (Fst e)        = FstV (desugarV e)
 desugarV (Snd e)        = SndV (desugarV e)
-desugarV (Head e)       = HeadV (desugarV e)
-desugarV (Tail e)       = TailV (desugarV e)
 desugarV (If c t e)     = IfV (desugarV c) (desugarV t) (desugarV e)
 desugarV (Fun p c)      = FunV p (desugarV c)
 desugarV (App f a)      = AppV (desugarV f) (desugarV a)
+
+--Z = \f.(\x.f(\v.((x x) v)))(\x.f(\v.((x x) v)))

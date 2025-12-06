@@ -101,9 +101,6 @@ smallStep (SndV (PairV v1 v2)) env
   | isValueV v1 && isValueV v2 = (v2, env)
 smallStep (SndV e) env    = (SndV (fst (smallStep e env)), env)
 
--- Head y Tail son desazucarados a Fst y Snd
-smallStep (HeadV e) env    = smallStep (FstV e) env
-smallStep (TailV e) env    = smallStep (SndV e) env
 
 -- Funciones y aplicación
 smallStep (FunV p c) env    = (ClosureV p c env, env)

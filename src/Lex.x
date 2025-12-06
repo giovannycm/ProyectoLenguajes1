@@ -69,7 +69,8 @@ tokens :-
   -- Átomos
   "#t"    { \_ -> TokenBool True }
   "#f"    { \_ -> TokenBool False }
-  $digit+    { \s -> TokenNum (read s) }
+  0       { \s -> TokenNum 0 }
+  [1-9]$digit*  { \s -> TokenNum (read s) }
   $letter$idrest* { \s -> TokenId s }
 
   -- Catch-all
